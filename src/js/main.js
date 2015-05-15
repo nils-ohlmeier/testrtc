@@ -306,7 +306,7 @@ function runAllSequentially(tasks, doneCallback) {
 
   function runNext() {
     current++;
-    if (current >== tasks.length) {
+    if (current >= tasks.length) {
       doneCallback();
       return;
     }
