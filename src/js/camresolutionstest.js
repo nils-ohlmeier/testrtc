@@ -87,12 +87,8 @@ CamResolutionsTest.prototype = {
     var constraints = {
       audio: false,
       video: {
-        mandatory: {
-          minWidth:  resolution[0],
-          minHeight: resolution[1],
-          maxWidth:  resolution[0],
-          maxHeight: resolution[1]
-        }
+          width:  resolution[0],
+          height: resolution[1]
       }
     };
     try {

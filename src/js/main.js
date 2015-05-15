@@ -31,10 +31,13 @@ var testFilters = [];
 var currentTest;
 
 document.querySelector('gum-dialog').addEventListener('closed', function() {
-  if (typeof MediaStreamTrack.getSources === 'undefined') {
-    console.log('getSources is not supported, device selection not possible.');
-  } else {
+  if (typeof navigator.mediaDevices.enumerateDevices !== 'undefined') {
+    navigator.mediaDevices.enumerateDevices()
+      .then(function(devices) { gotSources(devices); });
+  } else if (typeof MediaStreamTrack.getSources !== 'undefined') {
     MediaStreamTrack.getSources(gotSources);
+  } else {
+    console.log('getSources is not supported, device selection not possible.');
   }
   startButton.removeAttribute('disabled');
 });
@@ -303,7 +306,7 @@ function runAllSequentially(tasks, doneCallback) {
 
   function runNext() {
     current++;
-    if (current === tasks.length) {
+    if (current >== tasks.length) {
       doneCallback();
       return;
     }
@@ -336,6 +339,7 @@ function doGetUserMedia(constraints, onSuccess, onFail) {
     appendSourceId(videoSelect.value, 'video', constraints);
 
     traceGumEvent({'status': 'pending', 'constraints': constraints});
+    //console.log("gUM constraints: " + JSON.stringify(constraints));
     getUserMedia(constraints, successFunc, failFunc);
   } catch (e) {
     traceGumEvent({'status': 'exception', 'error': e.message});
@@ -344,6 +348,9 @@ function doGetUserMedia(constraints, onSuccess, onFail) {
 }
 
 function appendSourceId(id, type, constraints) {
+  if (!id || id.lenght == 0) {
+    return;
+  }
   if (constraints[type] === true) {
     constraints[type] = {optional: [{sourceId: id}]};
   } else if (typeof constraints[type] === 'object') {
@@ -358,16 +365,16 @@ function gotSources(sourceInfos) {
   for (var i = 0; i !== sourceInfos.length; ++i) {
     var sourceInfo = sourceInfos[i];
     var option = document.createElement('option');
-    option.value = sourceInfo.id;
+    option.value = sourceInfo.id || sourceInfo.deviceId;
     appendOption(sourceInfo, option);
   }
 }
 
 function appendOption(sourceInfo, option) {
-  if (sourceInfo.kind === 'audio') {
+  if (sourceInfo.kind === 'audio' || sourceInfo.kind === 'audioinput') {
     option.text = sourceInfo.label || 'microphone ' + (audioSelect.length + 1);
     audioSelect.appendChild(option);
-  } else if (sourceInfo.kind === 'video') {
+  } else if (sourceInfo.kind === 'video' || sourceInfo.kind === 'videoinput') {
     option.text = sourceInfo.label || 'camera ' + (videoSelect.length + 1);
     videoSelect.appendChild(option);
   } else {

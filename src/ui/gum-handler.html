@@ -23,6 +23,9 @@ visible on the page but is no more it will keep polling permissions once per sec
     error: false,
 
     ready: function () {
+      /* TODO the whole idea of doing gUM make not much sense if
+       * enumerateDevices() is available, but that is a bigger project
+       */
       if (typeof navigator.getUserMedia !== 'undefined') {
         this.triggerGetUserMedia_();
       } else {
@@ -35,7 +38,10 @@ visible on the page but is no more it will keep polling permissions once per sec
         return;
       }
 
-      if (typeof MediaStreamTrack.getSources !== 'undefined') {
+      if (typeof navigator.mediaDevices.enumerateDevices !== 'undefined') {
+        navigator.mediaDevices.enumerateDevices()
+          .then(devices => this.triggerGetUserMediaBasedOnSources_(devices));
+      } else if (typeof MediaStreamTrack.getSources !== 'undefined') {
         MediaStreamTrack.getSources(this.triggerGetUserMediaBasedOnSources_.bind(this));
       } else {
         this.getUserMediaBasedOnSources_([]);
@@ -48,10 +54,10 @@ visible on the page but is no more it will keep polling permissions once per sec
         constraints = {audio: true, video: true};
       } else {
         for (var i = 0; i < sources.length; i++) {
-          if (sources[i].kind === 'audio') {
+          if (sources[i].kind === 'audio' || sources[i].kind === 'audioinput') {
             constraints.audio = true;
           }
-          if (sources[i].kind === 'video') {
+          if (sources[i].kind === 'video' || sources[i].kind === 'videoinput') {
             constraints.video = true;
           }
         }
@@ -68,6 +74,7 @@ visible on the page but is no more it will keep polling permissions once per sec
       for (var j = 0; j < stream.getAudioTracks().length; j++) {
         stream.getAudioTracks()[j].stop();
       }
+      stream.stop();
       this.pending = false;
       this.error = false;
     },

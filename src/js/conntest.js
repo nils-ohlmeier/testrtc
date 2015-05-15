@@ -85,7 +85,7 @@ function gatherCandidates(config, params, isGood) {
 
   // Create an audio-only, recvonly offer, and setLD with it.
   // This will trigger candidate gathering.
-  var createOfferParams = {mandatory: {OfferToReceiveAudio: true}};
+  var createOfferParams = {offerToReceiveAudio: true};
   pc.createOffer(function(offer) { pc.setLocalDescription(offer, noop, noop) ;},
                  noop, createOfferParams);
 }
